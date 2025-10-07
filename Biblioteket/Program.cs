@@ -15,50 +15,81 @@
         }
 
         static void StartMenu(string[][] Users)
-        {           
-            Console.Write("Användarnamn:");
-            string UserName = Console.ReadLine();
-            
-            //en int som inehåller det giltiga PIN numret
-            int UserPIN;
+        {
+            int Attempts = 0;
 
-            //en loop som använder TryParse för att kolla så att användaren faktiskt skriver in siffror som PIN, annars felmeddelande
-            while (true)
+            //säger att man får inte göra fler än 3 försök, då avbryts programmet
+            while (Attempts < 3)
             {
-                Console.Write("PIN:");
-                string inputPIN = Console.ReadLine();
-                if (int.TryParse(inputPIN, out UserPIN))
-                {
-                    break;
-                }
-                else
-                {
-                    Console.WriteLine("PIN-koden ska bara innehålla siffror. Försök igen");
-                }
-            }            
-
-            bool logInSuccess = false;
-
-            //en loop som kör igenom alla användare
-            foreach (string[] user in Users)
-            {
-                string name = user[0];
-                string PIN = user[1];
+                string UserName;
                 
-                //if sats som kollar om användaren skriver in rätt och konverterar UserPIN till en string så det ska funka
-                if (UserName == name && UserPIN.ToString() == PIN)
+                //kontrollerar att användaren inte skriver siffror som användarnamn
+                while (true)
                 {
-                    Console.WriteLine($"\nVälkommen {UserName}! Du är inloggad.");
-                    logInSuccess = true;
-                    break;
+                    Console.Write("Användarnamn:");
+                    UserName = Console.ReadLine();
+
+                    if (int.TryParse(UserName, out _))
+                    {
+                        Console.WriteLine("Användarnamnet får inte innehålla siffror.");
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
+
+                //en int som inehåller det giltiga PIN numret
+                int UserPIN;
+                bool validPIN = false;
+
+                //en loop som använder TryParse för att kolla så att användaren faktiskt skriver in siffror som PIN, annars felmeddelande
+                while (true)
+                {
+                    Console.Write("PIN:");
+                    string inputPIN = Console.ReadLine();
+
+                    if (int.TryParse(inputPIN, out UserPIN))
+                    {
+                        validPIN = true;
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("PIN-koden ska bara innehålla siffror. Försök igen");
+                    }
+                }
+
+                //en loop som kollar användarnamn och PIN 
+                bool logInSuccess = false;
+                foreach (string[] user in Users)
+                {
+                    string name = user[0];
+                    string PIN = user[1];
+
+                    //if sats som kollar om användaren skriver in rätt och konverterar UserPIN till en string så det ska funka
+                    if (UserName == name && UserPIN.ToString() == PIN)
+                    {
+                        Console.WriteLine($"\nVälkommen {UserName}! Du är inloggad.");
+                        logInSuccess = true;
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Fel användarnamn eller PIN-kod. Försök igen");
+                        break;
+                    }
+                }
+
+                // räknar hur många försök man gjort
+                if (!logInSuccess)
+                {
+                    Attempts++;
+                    Console.WriteLine($"Du har gjort {Attempts} försök.");
+                }
+
             }
-            // om användaren skriver fel får man ett felmeddelande och kan föröka igen 
-            if (!logInSuccess)
-            {
-                Console.WriteLine("\nFel användarnamn elle PIN. Försök igen");
-                StartMenu(Users);
-            }
+            Console.WriteLine("För många försök! Programmet avslutas.");
         }
 
         // en metod som sparar användare i arrayer
