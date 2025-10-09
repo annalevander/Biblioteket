@@ -168,7 +168,7 @@ namespace Biblioteket
                         showBooks();
                         break;
                     case "2":
-                        loanBooks(userIndex, userLoans);
+                        loanBook(userIndex, userLoans);
                         break;
                     case "3":
                         returnBook(userIndex, userLoans);
@@ -215,6 +215,53 @@ namespace Biblioteket
 
             Console.WriteLine("Tryck enter för att återgå till menyn");
             Console.ReadLine();
+        }
+
+        static void loanBook(int userIndex, int[][] userLoans)
+        {
+            Console.Clear();
+            Console.WriteLine("Låna bok");
+            showBooks();
+
+            Console.WriteLine("Ange numret på boken du vill låna");
+            string input = Console.ReadLine();
+
+            if (!int.TryParse(input, out int choice) || choice < 1 || choice > books.GetLength(0))
+            {
+                Console.WriteLine("Ogiltigt val");
+                return;
+            }
+
+            int bookIndex = choice - 1;
+            int total = int.Parse(books[bookIndex, 1]);
+            int borrowed = int.Parse(books[bookIndex, 2]);
+            int avalible = total - borrowed;
+
+            if (avalible <= 0)
+            {
+                Console.WriteLine($"Det finns inga tillgängliga exemplar av \"{books[bookIndex, 0]}\"");
+                return;
+            }
+
+            int avalibleSpot = -1;
+            for (int i = 0; i < userLoans[userIndex].Length; i ++)
+            {
+                if (userLoans[userIndex][i] == - 1)
+                {
+                    avalibleSpot = i;
+                    break;
+                }
+            }
+
+            if (avalibleSpot == - 1)
+            {
+                Console.WriteLine("Du kan inte låna fler böcker");
+                return;
+            }
+
+            userLoans[userIndex][avalibleSpot] = bookIndex;
+            books[bookIndex, 2] = (borrowed + 1).ToString();
+            Console.WriteLine($"Du har lånat \"{books[bookIndex, 0]}\"");
         }
     }
 }
