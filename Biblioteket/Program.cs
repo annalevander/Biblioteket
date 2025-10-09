@@ -263,6 +263,77 @@ namespace Biblioteket
             books[bookIndex, 2] = (borrowed + 1).ToString();
             Console.WriteLine($"Du har lånat \"{books[bookIndex, 0]}\"");
         }
+
+        static void returnBook(int userIndex, int[][] userLoans)
+        {
+            Console.Clear();
+            Console.WriteLine("Lämna tillbaka bok");
+
+            int[] loans = userLoans[userIndex];
+            bool hasLoans = false;
+
+            for (int i = 0; i < loans.Length; i++)
+            {
+                if (loans[i] != - 1)
+                {
+                    hasLoans = true;
+                    break;
+                }
+            }
+
+            if (!hasLoans)
+            {
+                Console.WriteLine("Du har inga lån nu");
+                return;
+            }
+
+            Console.WriteLine("Dina lånade böcker");
+            int displayIndex = 1;
+            for (int i = 0; i < loans.Length; i++)
+            {
+                if (loans[i] != -1)
+                {
+                    Console.WriteLine($"{displayIndex}. {books[loans[i], 0]}");
+                    displayIndex++;
+                }
+            }
+
+            Console.Write("Ange numret på boken du vill lämna tillbaka");
+            string input = Console.ReadLine();
+            if (int.TryParse(input, out int returnChoice) || returnChoice < 1)
+            {
+                Console.WriteLine("Ogiltigt val");
+                return;
+            }
+
+            int position = -1;
+            int counter = 0;
+            for (int i = 0; i < loans.Length; i++)
+            {
+                if (loans[i] != - 1)
+                {
+                    counter++;
+                    if (counter == returnChoice)
+                    {
+                        position = i;
+                        break;
+                    }                      
+                }
+            }
+
+            if (position == - 1)
+            {
+                Console.WriteLine("Ogiltigt val");
+                return;
+            }
+
+            int bookIndex = loans[position];
+            loans[position] = -1;
+            int borrowed = int.Parse(books[bookIndex, 2]);
+            books[bookIndex, 2] = Math.Max(0, borrowed - 1).ToString();
+
+            Console.WriteLine($"Du har lämnat tillbaka \"{books[bookIndex, 0]}\"");
+        }
     }
 }
 //GÖR EN NY BRANCH!!!!!!!
