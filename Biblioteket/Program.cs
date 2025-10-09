@@ -18,11 +18,28 @@ namespace Biblioteket
         };
         static void Main(string[] args)
         {
-            GreetUser();
-            string [][] users = UserSystem();
-            logIn(users);            
-            mainMenu(true);
-            showBooks();
+            static void Main(string[] args)
+            {
+                GreetUser();
+                string[][] users = UserSystem();
+
+                const int MaxLoansPerUser = 5; 
+                int[][] userLoans = RunUserLoans(users.Length, MaxLoansPerUser);
+
+                while (true)
+                {
+                    int userIndex = logIn(users);
+                    if (userIndex == -1)
+                    {
+                        Console.WriteLine("För många misslyckade inloggningsförsök. Programmet avslutas.");
+                        return;
+                    }
+
+                    // Öppna meny för inloggad användare; efter logout återgår vi till inloggningen
+                    mainMenu(userIndex, users, userLoans);
+                }
+            }
+
         }
 
         static void GreetUser()
@@ -30,7 +47,7 @@ namespace Biblioteket
             Console.WriteLine("Välkommen till lånecentralen");
         }
 
-        static void logIn(string[][] Users)
+        static int logIn(string[][] Users)
         {
             int Attempts = 0;
 
@@ -45,6 +62,14 @@ namespace Biblioteket
                     Console.Write("Användarnamn:");
                     UserName = Console.ReadLine();
 
+                    //kontrollerar så att användar inte skriver in tomt användarnamn
+                    if (string.IsNullOrWhiteSpace(UserName))
+                    {
+                        Console.WriteLine("Användarnamnet får inte vara tomt");
+                        continue;
+                    }
+
+                    //kontrollerar att användaren inte skriver siffror som användarnamn
                     if (int.TryParse(UserName, out _))
                     {
                         Console.WriteLine("Användarnamnet får inte innehålla siffror.");
@@ -56,8 +81,7 @@ namespace Biblioteket
                 }
 
                 //en int som inehåller det giltiga PIN numret
-                int UserPIN;
-                bool validPIN = false;
+                int UserPIN;               
 
                 //en loop som använder TryParse för att kolla så att användaren faktiskt skriver in siffror som PIN, annars felmeddelande
                 while (true)
@@ -67,7 +91,6 @@ namespace Biblioteket
 
                     if (int.TryParse(inputPIN, out UserPIN))
                     {
-                        validPIN = true;
                         break;
                     }
                     else
@@ -76,72 +99,60 @@ namespace Biblioteket
                     }
                 }
 
-                //en loop som kollar användarnamn och PIN 
-                bool logInSuccess = false;
-                foreach (string[] user in Users)
+               //söker igenom alla användare och returnerar ett index 
+               for (int i = 0; i < Users.Length; i++)
                 {
-                    string name = user[0];
-                    string PIN = user[1];
-
-                    //if sats som kollar om användaren skriver in rätt och konverterar UserPIN till en string så det ska funka
-                    if (UserName == name && UserPIN.ToString() == PIN)
+                    if (Users[i][0].Equals(UserName, StringComparison.OrdinalIgnoreCase) && Users[i][1] == UserPIN.ToString())
                     {
-                        Console.WriteLine($"\nVälkommen {UserName}! Du är inloggad.");
-                        logInSuccess = true;
-                        mainMenu(logInSuccess);
-                        break;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Fel användarnamn eller PIN-kod. Försök igen");
-                        break;
+                        Console.WriteLine($"\nVälkommen {Users[i][0]}! Du är inloggad");
+                        return i;//användarens index om man är inloggad
                     }
                 }
 
-                // räknar hur många försök man gjort
-                if (!logInSuccess)
-                {
-                    Attempts++;
-                    Console.WriteLine($"Du har gjort {Attempts} försök.");
-                }
-                else if (Attempts == 3)
-                {
-                    Console.WriteLine("För många försök! Programmet avslutas.");
-                }
-                else if (logInSuccess)
-                {
-                    break;
-                }
-
+                // lägger till ett försök för varje fel inloggning
+                Attempts++;
+                Console.WriteLine($"Fel användarnamn eller PIN-kod, du har gjort {Attempts} försök");
             }
+
+            return -1;
             
         }
 
         // en metod som sparar användare i arrayer
         static string[][] UserSystem()
         {
-            string[] UserOne = ["Anna", "1234"];
-            string[] UserTwo = ["Funghione", "1235"];
-            string[] UserThree = ["Tangione", "1236"];
-            string[] UserFour = ["Oscar", "1237"];
-            string[] UserFive = ["TregNeko", "1238"];
-            string[][] Users = [UserOne, UserTwo, UserThree, UserFour, UserFive];
+            string[] UserOne = new string[] { "Anna", "1234" };
+            string[] UserTwo = new string[] { "Funghione", "1235" };
+            string[] UserThree = new string[] { "Tangione", "1236" };
+            string[] UserFour = new string[] {"Oscar", "1237"};
+            string[] UserFive = new string[] { "TregNeko", "1238" };
+
+            string[][] Users = new string[][] { UserOne, UserTwo, UserThree, UserFour, UserFive };
             return Users;
         }
 
-        static void mainMenu(bool logInSuccess)
+        static int[][] InitializeUserLoans(int userCount, int slotsPerUser)
         {
-     
-            if (!logInSuccess)
+            int[][] loans = new int[userCount][];
+            for (int i = 0; i < userCount; i++)
             {
-                return;//om inloggning misslyckas hoppa över menyn
+                loans[i] = new int[slotsPerUser];
+                for (int j = 0; j < slotsPerUser; j++)
+                    loans[i][j] = -1; // -1 betyder tom plats
             }
+            return loans;
+        }
+
+
+        static void mainMenu(int userIndex, string[][] users, int[][] userLoans)
+        {
 
             bool isRunning = true;//en bool som kör loopen så länge den är true
 
             while (isRunning)
             {
                 Console.Clear();//så att konsollen rensas när menyn ska köras
+                Console.WriteLine($"Inloggad som {users[userIndex][0]}\n");
                 Console.WriteLine("1. Visa böcker");
                 Console.WriteLine("2. Låna bok");
                 Console.WriteLine("3. Lämna tillbaka bok");
@@ -149,30 +160,28 @@ namespace Biblioteket
                 Console.WriteLine("5. Logga ut");
                 Console.Write("\nVälj en funktion genom att skriva in tillhörande siffra:");
 
-                string input = Console.ReadLine();
 
+                string input = Console.ReadLine();
                 switch (input)//hanterar valen som finns i menyn
                 {
                     case "1":
                         showBooks();
                         break;
                     case "2":
-                        loanBooks();
+                        loanBooks(userIndex, userLoans);
                         break;
                     case "3":
-                        returnBook();
+                        returnBook(userIndex, userLoans);
                         break;
                     case "4":
-                        myLoans();
+                        myLoans(userIndex, userLoans);
                         break;
                     case "5":
                         Console.WriteLine("Du har loggat ut.");
                         Console.WriteLine("Tryck enter för att återgå till inloggningen");
                         Console.ReadLine();
                         isRunning = false; //avslutar loopen och återgår till huvudmenyn
-                        break;
-
-                        break;
+                        break;                       ;
                     default:
                         Console.WriteLine("Ogiltigt val. Försök igen");
                         break;
@@ -183,8 +192,7 @@ namespace Biblioteket
                     Console.WriteLine("\nTryck enter för att återgå till menyn");
                     Console.ReadLine();
                 }
-            }
-            
+            }            
         }
 
         static void showBooks()
@@ -210,4 +218,4 @@ namespace Biblioteket
         }
     }
 }
-
+//GÖR EN NY BRANCH!!!!!!!
