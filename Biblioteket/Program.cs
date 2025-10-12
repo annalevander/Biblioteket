@@ -18,28 +18,29 @@ namespace Biblioteket
         };
         static void Main(string[] args)
         {
-            static void Main(string[] args)
+            RunProgram();
+        }
+
+        static void RunProgram()
+        {
+            GreetUser();
+            string[][] users = UserSystem();
+
+            const int MaxLoansPerUser = 5;
+            int[][] userLoans = InitializeUserLoans(users.Length, MaxLoansPerUser);
+
+            while (true)
             {
-                GreetUser();
-                string[][] users = UserSystem();
-
-                const int MaxLoansPerUser = 5; 
-                int[][] userLoans = RunUserLoans(users.Length, MaxLoansPerUser);
-
-                while (true)
+                int userIndex = logIn(users);
+                if (userIndex == -1)
                 {
-                    int userIndex = logIn(users);
-                    if (userIndex == -1)
-                    {
-                        Console.WriteLine("För många misslyckade inloggningsförsök. Programmet avslutas.");
-                        return;
-                    }
-
-                    // Öppna meny för inloggad användare; efter logout återgår vi till inloggningen
-                    mainMenu(userIndex, users, userLoans);
+                    Console.WriteLine("För många misslyckade inloggningsförsök. Programmet avslutas.");
+                    return;
                 }
-            }
 
+                // Öppna meny för inloggad användare; efter logout återgår vi till inloggningen
+                mainMenu(userIndex, users, userLoans);
+            }
         }
 
         static void GreetUser()
@@ -49,6 +50,7 @@ namespace Biblioteket
 
         static int logIn(string[][] Users)
         {
+            Console.Clear();
             int Attempts = 0;
 
             //säger att man får inte göra fler än 3 försök, då avbryts programmet
@@ -213,17 +215,16 @@ namespace Biblioteket
                 Console.WriteLine($"Exemplar: {total}\nUtlånade: {borrowed}\nTillgängliga: {avalible}\n");
             }
 
-            Console.WriteLine("Tryck enter för att återgå till menyn");
-            Console.ReadLine();
+            Console.WriteLine("Tryck enter för att återgå till menyn");            
         }
 
         static void loanBook(int userIndex, int[][] userLoans)
         {
             Console.Clear();
-            Console.WriteLine("Låna bok");
+            Console.WriteLine("Låna bok");          
             showBooks();
-
             Console.WriteLine("Ange numret på boken du vill låna");
+
             string input = Console.ReadLine();
 
             if (!int.TryParse(input, out int choice) || choice < 1 || choice > books.GetLength(0))
@@ -300,7 +301,7 @@ namespace Biblioteket
 
             Console.Write("Ange numret på boken du vill lämna tillbaka");
             string input = Console.ReadLine();
-            if (int.TryParse(input, out int returnChoice) || returnChoice < 1)
+            if (!int.TryParse(input, out int returnChoice) || returnChoice < 1)
             {
                 Console.WriteLine("Ogiltigt val");
                 return;
@@ -333,6 +334,30 @@ namespace Biblioteket
             books[bookIndex, 2] = Math.Max(0, borrowed - 1).ToString();
 
             Console.WriteLine($"Du har lämnat tillbaka \"{books[bookIndex, 0]}\"");
+        }
+
+        static void myLoans(int userIndex, int[][] userLoans)
+        {
+            Console.Clear();
+            Console.WriteLine("Mina lån");
+
+            int[] loans = userLoans[userIndex];
+            bool hasLoans = false;
+            int display = 1;
+            for (int i = 0; i < loans.Length; i++)
+            {
+                if (loans[i] != - 1)
+                {                   
+                    Console.WriteLine($"{display}. {books[loans[i], 0]}");
+                    hasLoans = true;
+                    display++;
+                }
+            }
+
+            if (!hasLoans)
+            {
+                Console.WriteLine("Du har inga lån");
+            }
         }
     }
 }
